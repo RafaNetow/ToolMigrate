@@ -1,2 +1,0 @@
-# ToolMigrate
-Migrate DB
