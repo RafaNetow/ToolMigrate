@@ -46,7 +46,7 @@ public class DB2 extends DataBase {
             //Load class into memory
             Class.forName(jdbcClassName);
             //Establish connection
-            conn = DriverManager.getConnection(url, user, password);
+            this.conn = DriverManager.getConnection(url, user, password);
             
  
         } catch (ClassNotFoundException e) {
@@ -71,7 +71,8 @@ public class DB2 extends DataBase {
      Statement st = null;
         try {
                st = conn.createStatement();
-              ResultSet rs = st.executeQuery("SELECT table_name FROM user_tables where TABLE_SCHEMA = "+this.currentConnection.userName);
+              String query = "SELECT table_name FROM user_tables where TABLE_SCHEMA = '"+this.currentConnection.userName.toUpperCase()+"'"; 
+               ResultSet rs = st.executeQuery(query);
               List<String> tables = new ArrayList(); 
               while(rs.next()){
                  tables.add( rs.getString(1));
@@ -154,8 +155,21 @@ public class DB2 extends DataBase {
 
     @Override
     String getColumnInfo(String tableName) {
+        ResultSet ss = null;
+        Statement st = null;
+        try {
+            st = this.conn.createStatement();
+        } catch (SQLException ex) {
+            Logger.getLogger(DB2.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            String query = "select*from "+"user_tables";
+          ss =  st.executeQuery(query);
+        } catch (SQLException ex) {
+            Logger.getLogger(Oracle.class.getName()).log(Level.SEVERE, null, ex);
+        }
         Statement ps = null;
-            String query = "select TYPENAME,COLNAME,LENGTH from SYSCAT.COLUMNS where TABLE_NAME = '" + tableName + "'";
+            String query = "select TYPENAME,COLNAME,LENGTH from SYSCAT.COLUMNS where TABNAME = '" + tableName.toUpperCase() + "'";
             String CF = "";
             ArrayList<String> data = new ArrayList<String>();
             try{
@@ -165,7 +179,13 @@ public class DB2 extends DataBase {
             
             while (rs.next())
             {
-                String table =rs.getString("COLNAME")+" "+rs.getString("TYPENAME")+"("+rs.getString("LENGTH")+")";
+                String table = "i";
+                                                                     
+                if(rs.getString("TYPENAME").equals("CHAR") || rs.getString("TYPENAME").equals("CHARACTER"))
+                          table =rs.getString("COLNAME")+" "+rs.getString("TYPENAME")+"("+rs.getString("LENGTH")+")";
+                else{
+                        table =rs.getString("COLNAME")+" "+rs.getString("TYPENAME");
+                                 }
                 data.add(table);
             }
 
@@ -183,7 +203,9 @@ public class DB2 extends DataBase {
 
     @Override
     boolean insertData(String table, Connection connect) {
-         Statement st=null;
+       
+            
+        Statement st=null;
             Statement st2 = null;
         try {
             st2 = connect.createStatement();
@@ -209,7 +231,7 @@ public class DB2 extends DataBase {
         }*/
        
         try {
-          rs =  st.executeQuery("Select* From "+table);
+          rs =  st.executeQuery("Select*From "+"user_tables");
         } catch (SQLException ex) {
             Logger.getLogger(Oracle.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -238,7 +260,7 @@ public class DB2 extends DataBase {
     List<String> getColumnsNames(String tableName) {
           ArrayList<String> columnsNames = new ArrayList<String>();
         try {
-            String query = "select TYPENAME,COLNAME,LENGTH from SYSCAT.COLUMNS where TABLE_NAME = '" + tableName + "'";
+            String query = "select TYPENAME,COLNAME,LENGTH from SYSCAT.COLUMNS where TABNAME = '" + tableName + "'";
           
             
             
